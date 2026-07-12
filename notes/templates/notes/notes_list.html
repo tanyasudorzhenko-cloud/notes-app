@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Нотатки про міста України</title>
+    <title>Мої нотатки</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Work+Sans:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'notes/css/style.css' %}">
@@ -12,28 +12,24 @@
 <body>
 
     <header class="hero">
-        <p class="hero__eyebrow">Мандрівний журнал</p>
-        <h1 class="hero__title">Нотатки про<br>міста України</h1>
-        <p class="hero__subtitle">Дванадцять міст, дванадцять річок, дванадцять причин повернутись.</p>
+        <p class="hero__eyebrow">Notes App</p>
+        <h1 class="hero__title">Мої нотатки</h1>
+        <p class="hero__subtitle">Усі нотатки, збережені в базі даних.</p>
     </header>
 
     <main class="notes-grid">
         {% for note in notes %}
         <article class="note-card">
-            <p class="note-card__eyebrow">{{ note.region }}</p>
-            <h2 class="note-card__city">{{ note.city }}</h2>
+            <p class="note-card__eyebrow">{{ note.category.title }}</p>
+            <h2 class="note-card__city">{{ note.title }}</h2>
             <svg class="note-card__river" viewBox="0 0 200 14" preserveAspectRatio="none" aria-hidden="true">
                 <path d="M0,7 C25,0 45,14 70,7 C95,0 115,14 140,7 C160,2 180,10 200,7"
                       fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
             <dl class="note-card__meta">
                 <div>
-                    <dt>Річка</dt>
-                    <dd>{{ note.river }}</dd>
-                </div>
-                <div>
-                    <dt>Засновано</dt>
-                    <dd>{{ note.founded }}</dd>
+                    <dt>Нагадування</dt>
+                    <dd>{% if note.reminder %}{{ note.reminder }}{% else %}—{% endif %}</dd>
                 </div>
             </dl>
             <p class="note-card__text">{{ note.text }}</p>
