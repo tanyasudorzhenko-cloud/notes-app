@@ -1,0 +1,114 @@
+
+/* ---------- Filter bar ---------- */
+.filter-bar {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.filter-bar__form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    flex: 1;
+}
+
+.filter-bar__input {
+    padding: 0.55rem 0.8rem;
+    border: 1px solid rgba(43, 38, 32, 0.15);
+    border-radius: 4px;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    background: #fff;
+    color: var(--charcoal);
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+    display: inline-block;
+    padding: 0.6rem 1.1rem;
+    border-radius: 4px;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+}
+
+.btn--primary {
+    background: var(--ink);
+    color: var(--parchment);
+}
+
+.btn--secondary {
+    background: var(--ochre);
+    color: var(--charcoal);
+}
+
+.btn--ghost {
+    background: transparent;
+    color: var(--charcoal);
+    border: 1px solid rgba(43, 38, 32, 0.25);
+}
+
+.btn--danger {
+    background: var(--terracotta);
+    color: #fff;
+}
+
+/* ---------- Forms ---------- */
+.form-card {
+    max-width: 640px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: #fff;
+    border: 1px solid rgba(43, 38, 32, 0.08);
+    border-radius: 4px;
+}
+
+.form-field {
+    margin-bottom: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.form-field label {
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: rgba(43, 38, 32, 0.6);
+}
+
+.form-field input,
+.form-field textarea,
+.form-field select {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid rgba(43, 38, 32, 0.15);
+    border-radius: 4px;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+}
+
+.form-field__error {
+    color: var(--terracotta);
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.form-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+}
+
+.note-card__link {
+    text-decoration: none;
+}

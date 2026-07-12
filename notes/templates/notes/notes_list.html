@@ -1,15 +1,8 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мої нотатки</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Work+Sans:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'notes/css/style.css' %}">
-</head>
-<body>
+{% extends "notes/base.html" %}
+
+{% block title %}Мої нотатки{% endblock %}
+
+{% block content %}
 
     <header class="hero">
         <p class="hero__eyebrow">Notes App</p>
@@ -17,11 +10,46 @@
         <p class="hero__subtitle">Усі нотатки, збережені в базі даних.</p>
     </header>
 
+    <div class="filter-bar">
+        <form method="get" class="filter-bar__form">
+            <input
+                type="text"
+                name="q"
+                placeholder="Пошук за назвою..."
+                value="{{ search_query }}"
+                class="filter-bar__input"
+            >
+
+            <select name="category" class="filter-bar__input">
+                <option value="">Усі категорії</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>
+                    {{ category.title }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <input
+                type="date"
+                name="reminder_date"
+                value="{{ reminder_date }}"
+                class="filter-bar__input"
+            >
+
+            <button type="submit" class="btn btn--secondary">Знайти</button>
+            <a href="{% url 'notes_list' %}" class="btn btn--ghost">Скинути</a>
+        </form>
+
+        <a href="{% url 'note_create' %}" class="btn btn--primary">+ Створити нотатку</a>
+    </div>
+
     <main class="notes-grid">
         {% for note in notes %}
         <article class="note-card">
             <p class="note-card__eyebrow">{{ note.category.title }}</p>
-            <h2 class="note-card__city">{{ note.title }}</h2>
+            <a href="{% url 'note_detail' note.pk %}" class="note-card__link">
+                <h2 class="note-card__city">{{ note.title }}</h2>
+            </a>
             <svg class="note-card__river" viewBox="0 0 200 14" preserveAspectRatio="none" aria-hidden="true">
                 <path d="M0,7 C25,0 45,14 70,7 C95,0 115,14 140,7 C160,2 180,10 200,7"
                       fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -34,6 +62,8 @@
             </dl>
             <p class="note-card__text">{{ note.text }}</p>
         </article>
+        {% empty %}
+        <p>Нотаток не знайдено.</p>
         {% endfor %}
     </main>
 
@@ -41,5 +71,4 @@
         <p>{{ notes|length }} нотаток · notes_app</p>
     </footer>
 
-</body>
-</html>
+{% endblock %}

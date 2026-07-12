@@ -1,0 +1,38 @@
+{% extends "notes/base.html" %}
+
+{% block title %}Нова нотатка{% endblock %}
+
+{% block content %}
+
+    <header class="hero">
+        <p class="hero__eyebrow">Notes App</p>
+        <h1 class="hero__title">Нова нотатка</h1>
+        <p class="hero__subtitle">Заповни поля і збережи нотатку.</p>
+    </header>
+
+    <div class="form-card">
+        <form method="post">
+            {% csrf_token %}
+
+            {% for field in form %}
+            <div class="form-field">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                    <p class="form-field__error">{{ field.errors|join:", " }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn--primary">Зберегти</button>
+                <a href="{% url 'notes_list' %}" class="btn btn--ghost">Скасувати</a>
+            </div>
+        </form>
+    </div>
+
+    <footer class="footer">
+        <p>notes_app</p>
+    </footer>
+
+{% endblock %}
