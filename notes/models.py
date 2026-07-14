@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 
@@ -16,6 +17,13 @@ class Note(models.Model):
         Category,
         on_delete=models.CASCADE,
         related_name="notes",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notes",
+        null=True,
+        blank=True,
     )
 
     def __str__(self):

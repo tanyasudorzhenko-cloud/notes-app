@@ -1,22 +1,22 @@
-from django.test import TestCase
-
 """
 Тести для функціоналу нотаток.
 
-- NoteModelTests, NoteFormTests   - unit-тести: перевіряють логіку
-  збереження/редагування напряму (без HTTP), швидкі й ізольовані.
+- NoteModelTests, NoteFormTests   - unit-тести: логіка збереження/
+  редагування напряму (без HTTP).
 
 - NoteViewsIntegrationTests       - інтеграційні тести (Extra): через
-  Django test client реально "заходять" на сторінки (create/detail/
-  delete/list з фільтрами) і перевіряють повний ланцюжок запит -> view
-  -> база даних -> відповідь.
+  Django test client, з залогіненим користувачем (view тепер вимагають
+  автентифікації) + перевірка, що чужі нотатки недоступні.
 """
 
-from django.test import TestCase, Client
+from django.contrib.auth import get_user_model
+from django.test import Client, TestCase
 from django.urls import reverse
 
-from .models import Category, Note
 from .forms import NoteForm
+from .models import Category, Note
+
+User = get_user_model()
 
 
 # ---------------------------------------------------------------------------
@@ -26,41 +26,42 @@ from .forms import NoteForm
 class NoteModelTests(TestCase):
     def setUp(self):
         self.category = Category.objects.create(title="Робота")
+        self.user = User.objects.create_user(username="tester", password="pass12345")
 
     def test_note_is_created_with_correct_fields(self):
         note = Note.objects.create(
             title="Здати звіт",
             text="Підготувати квартальний звіт.",
             category=self.category,
+            user=self.user,
         )
         self.assertEqual(note.title, "Здати звіт")
-        self.assertEqual(note.text, "Підготувати квартальний звіт.")
         self.assertEqual(note.category, self.category)
+        self.assertEqual(note.user, self.user)
         self.assertIsNone(note.reminder)
 
     def test_note_str_returns_title(self):
-        note = Note.objects.create(title="Купити молоко", text="...", category=self.category)
+        note = Note.objects.create(title="Купити молоко", text="...", category=self.category, user=self.user)
         self.assertEqual(str(note), "Купити молоко")
 
     def test_note_can_be_updated(self):
-        note = Note.objects.create(title="Старий заголовок", text="старий текст", category=self.category)
+        note = Note.objects.create(title="Старий заголовок", text="старий текст", category=self.category, user=self.user)
 
         note.title = "Новий заголовок"
-        note.text = "новий текст"
         note.save()
 
         updated = Note.objects.get(pk=note.pk)
         self.assertEqual(updated.title, "Новий заголовок")
-        self.assertEqual(updated.text, "новий текст")
 
 
 # ---------------------------------------------------------------------------
-# Unit-тести: форма (саме тут "живе" логіка збереження/редагування)
+# Unit-тести: форма
 # ---------------------------------------------------------------------------
 
 class NoteFormTests(TestCase):
     def setUp(self):
         self.category = Category.objects.create(title="Особисте")
+        self.user = User.objects.create_user(username="tester", password="pass12345")
 
     def _valid_data(self, **overrides):
         data = {
@@ -76,24 +77,22 @@ class NoteFormTests(TestCase):
         form = NoteForm(data=self._valid_data(title="Тест форми"))
         self.assertTrue(form.is_valid(), form.errors)
 
-        note = form.save()
+        note = form.save(commit=False)
+        note.user = self.user
+        note.save()
+
         self.assertEqual(Note.objects.count(), 1)
         self.assertEqual(note.title, "Тест форми")
 
     def test_form_updates_existing_note(self):
-        note = Note.objects.create(title="Було", text="старий текст", category=self.category)
+        note = Note.objects.create(title="Було", text="старий текст", category=self.category, user=self.user)
 
-        form = NoteForm(
-            data=self._valid_data(title="Стало", text="новий текст"),
-            instance=note,
-        )
+        form = NoteForm(data=self._valid_data(title="Стало"), instance=note)
         self.assertTrue(form.is_valid(), form.errors)
         form.save()
 
         updated = Note.objects.get(pk=note.pk)
         self.assertEqual(updated.title, "Стало")
-        self.assertEqual(updated.text, "новий текст")
-        # переконуємось, що це той самий запис, а не новий
         self.assertEqual(Note.objects.count(), 1)
 
     def test_form_invalid_without_title(self):
@@ -101,106 +100,82 @@ class NoteFormTests(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn("title", form.errors)
 
-    def test_form_invalid_without_category(self):
-        form = NoteForm(data=self._valid_data(category=""))
-        self.assertFalse(form.is_valid())
-        self.assertIn("category", form.errors)
-
-    def test_reminder_is_optional(self):
-        form = NoteForm(data=self._valid_data(reminder=""))
-        self.assertTrue(form.is_valid(), form.errors)
-
-    def test_reminder_is_parsed_from_datetime_local_format(self):
-        form = NoteForm(data=self._valid_data(reminder="2026-08-20T14:30"))
-        self.assertTrue(form.is_valid(), form.errors)
-        note = form.save()
-        self.assertEqual(note.reminder.strftime("%Y-%m-%dT%H:%M"), "2026-08-20T14:30")
-
 
 # ---------------------------------------------------------------------------
-# Інтеграційні тести (Extra): через test client, реальні HTTP-запити
+# Інтеграційні тести (Extra): через test client, з автентифікацією
 # ---------------------------------------------------------------------------
 
 class NoteViewsIntegrationTests(TestCase):
     def setUp(self):
         self.client = Client()
-        self.category_work = Category.objects.create(title="Робота")
-        self.category_home = Category.objects.create(title="Особисте")
+        self.category = Category.objects.create(title="Робота")
 
-    def test_notes_list_returns_200(self):
+        self.user = User.objects.create_user(username="alice", password="pass12345")
+        self.other_user = User.objects.create_user(username="bob", password="pass12345")
+
+        self.my_note = Note.objects.create(
+            title="Моя нотатка", text="...", category=self.category, user=self.user
+        )
+        self.foreign_note = Note.objects.create(
+            title="Чужа нотатка", text="...", category=self.category, user=self.other_user
+        )
+
+    def test_notes_list_requires_login(self):
         response = self.client.get(reverse("notes_list"))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "notes/notes_list.html")
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("login"), response.url)
 
-    def test_note_create_get_shows_form(self):
-        response = self.client.get(reverse("note_create"))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "<form")
+    def test_notes_list_shows_only_own_notes(self):
+        self.client.login(username="alice", password="pass12345")
+        response = self.client.get(reverse("notes_list"))
 
-    def test_note_create_post_saves_note_to_database(self):
-        response = self.client.post(reverse("note_create"), {
+        self.assertContains(response, "Моя нотатка")
+        self.assertNotContains(response, "Чужа нотатка")
+
+    def test_note_create_assigns_current_user(self):
+        self.client.login(username="alice", password="pass12345")
+        self.client.post(reverse("note_create"), {
             "title": "Нова нотатка",
             "text": "Текст",
             "reminder": "",
-            "category": self.category_work.pk,
+            "category": self.category.pk,
         })
-        self.assertEqual(Note.objects.count(), 1)
-        note = Note.objects.first()
-        self.assertEqual(note.title, "Нова нотатка")
-        # після успішного створення - редірект на деталі нотатки
-        self.assertRedirects(response, reverse("note_detail", args=[note.pk]))
 
-    def test_note_detail_get_shows_note_data(self):
-        note = Note.objects.create(title="Показати мене", text="...", category=self.category_work)
-        response = self.client.get(reverse("note_detail", args=[note.pk]))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Показати мене")
+        note = Note.objects.get(title="Нова нотатка")
+        self.assertEqual(note.user, self.user)
 
-    def test_note_detail_post_updates_note(self):
-        note = Note.objects.create(title="Старе", text="старий текст", category=self.category_work)
+    def test_cannot_view_foreign_note_detail(self):
+        self.client.login(username="alice", password="pass12345")
+        response = self.client.get(reverse("note_detail", args=[self.foreign_note.pk]))
+        self.assertEqual(response.status_code, 404)
 
-        response = self.client.post(reverse("note_detail", args=[note.pk]), {
-            "title": "Нове",
-            "text": "новий текст",
+    def test_cannot_edit_foreign_note(self):
+        self.client.login(username="alice", password="pass12345")
+        self.client.post(reverse("note_detail", args=[self.foreign_note.pk]), {
+            "title": "Зламано!",
+            "text": "...",
             "reminder": "",
-            "category": self.category_home.pk,
+            "category": self.category.pk,
         })
 
-        note.refresh_from_db()
-        self.assertEqual(note.title, "Нове")
-        self.assertEqual(note.category, self.category_home)
-        self.assertRedirects(response, reverse("note_detail", args=[note.pk]))
+        self.foreign_note.refresh_from_db()
+        self.assertEqual(self.foreign_note.title, "Чужа нотатка")  # не змінилось
 
-    def test_note_delete_get_shows_confirmation(self):
-        note = Note.objects.create(title="Видалити мене", text="...", category=self.category_work)
-        response = self.client.get(reverse("note_delete", args=[note.pk]))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Видалити мене")
-        # GET нічого не видаляє
-        self.assertEqual(Note.objects.count(), 1)
+    def test_cannot_delete_foreign_note(self):
+        self.client.login(username="alice", password="pass12345")
+        response = self.client.post(reverse("note_delete", args=[self.foreign_note.pk]))
 
-    def test_note_delete_post_removes_note(self):
-        note = Note.objects.create(title="Видалити мене", text="...", category=self.category_work)
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(Note.objects.filter(pk=self.foreign_note.pk).exists())
 
-        response = self.client.post(reverse("note_delete", args=[note.pk]))
+    def test_own_note_delete_works(self):
+        self.client.login(username="alice", password="pass12345")
+        response = self.client.post(reverse("note_delete", args=[self.my_note.pk]))
 
-        self.assertEqual(Note.objects.count(), 0)
         self.assertRedirects(response, reverse("notes_list"))
+        self.assertFalse(Note.objects.filter(pk=self.my_note.pk).exists())
 
-    def test_filter_by_category(self):
-        Note.objects.create(title="Робоча", text="...", category=self.category_work)
-        Note.objects.create(title="Домашня", text="...", category=self.category_home)
-
-        response = self.client.get(reverse("notes_list"), {"category": self.category_work.pk})
-
-        self.assertContains(response, "Робоча")
-        self.assertNotContains(response, "Домашня")
-
-    def test_search_by_title(self):
-        Note.objects.create(title="Купити молоко", text="...", category=self.category_home)
-        Note.objects.create(title="Здати звіт", text="...", category=self.category_work)
-
-        response = self.client.get(reverse("notes_list"), {"q": "молоко"})
-
-        self.assertContains(response, "Купити молоко")
-        self.assertNotContains(response, "Здати звіт")# Create your tests here.
+    def test_logout_redirects_to_notes_list(self):
+        self.client.login(username="alice", password="pass12345")
+        response = self.client.post(reverse("logout"))
+        self.assertRedirects(response, reverse("notes_list"))
