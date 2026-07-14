@@ -4,71 +4,67 @@
 
 {% block content %}
 
-    <header class="hero">
-        <p class="hero__eyebrow">Notes App</p>
-        <h1 class="hero__title">Мої нотатки</h1>
-        <p class="hero__subtitle">Усі нотатки, збережені в базі даних.</p>
-    </header>
+    <div class="p-4 mb-4 bg-light rounded-3 border">
+        <h1 class="display-6 mb-1">Мої нотатки</h1>
+        <p class="text-muted mb-0">Усі нотатки, збережені в базі даних.</p>
+    </div>
 
-    <div class="filter-bar">
-        <form method="get" class="filter-bar__form">
-            <input
-                type="text"
-                name="q"
-                placeholder="Пошук за назвою..."
-                value="{{ search_query }}"
-                class="filter-bar__input"
-            >
+    <form method="get" class="row g-2 mb-4 align-items-center">
+        <div class="col-12 col-md-4">
+            <input type="text" name="q" class="form-control" placeholder="Пошук за назвою..."
+                   value="{{ search_query }}">
+        </div>
 
-            <select name="category" class="filter-bar__input">
+        <div class="col-6 col-md-3">
+            <select name="category" class="form-select">
                 <option value="">Усі категорії</option>
                 {% for category in categories %}
-                <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>
+                <option value="{{ category.id }}"
+                        {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>
                     {{ category.title }}
                 </option>
                 {% endfor %}
             </select>
+        </div>
 
-            <input
-                type="date"
-                name="reminder_date"
-                value="{{ reminder_date }}"
-                class="filter-bar__input"
-            >
+        <div class="col-6 col-md-3">
+            <input type="date" name="reminder_date" class="form-control" value="{{ reminder_date }}">
+        </div>
 
-            <button type="submit" class="btn btn--secondary">Знайти</button>
-            <a href="{% url 'notes_list' %}" class="btn btn--ghost">Скинути</a>
-        </form>
+        <div class="col-12 col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Знайти</button>
+            <a href="{% url 'notes_list' %}" class="btn btn-outline-secondary">Скинути</a>
+        </div>
+    </form>
 
-        <a href="{% url 'note_create' %}" class="btn btn--primary">+ Створити нотатку</a>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for note in notes %}
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <span class="badge text-bg-secondary mb-2">{{ note.category.title }}</span>
+                    <h5 class="card-title">
+                        <a href="{% url 'note_detail' note.pk %}" class="text-decoration-none link-dark">
+                            {{ note.title }}
+                        </a>
+                    </h5>
+                    <p class="card-text">{{ note.text|truncatewords:20 }}</p>
+                </div>
+                <div class="card-footer bg-white border-top-0 text-muted small">
+                    Нагадування:
+                    {% if note.reminder %}{{ note.reminder }}{% else %}—{% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col">
+            <p class="text-muted">Нотаток не знайдено.</p>
+        </div>
+        {% endfor %}
     </div>
 
-    <main class="notes-grid">
-        {% for note in notes %}
-        <article class="note-card">
-            <p class="note-card__eyebrow">{{ note.category.title }}</p>
-            <a href="{% url 'note_detail' note.pk %}" class="note-card__link">
-                <h2 class="note-card__city">{{ note.title }}</h2>
-            </a>
-            <svg class="note-card__river" viewBox="0 0 200 14" preserveAspectRatio="none" aria-hidden="true">
-                <path d="M0,7 C25,0 45,14 70,7 C95,0 115,14 140,7 C160,2 180,10 200,7"
-                      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            <dl class="note-card__meta">
-                <div>
-                    <dt>Нагадування</dt>
-                    <dd>{% if note.reminder %}{{ note.reminder }}{% else %}—{% endif %}</dd>
-                </div>
-            </dl>
-            <p class="note-card__text">{{ note.text }}</p>
-        </article>
-        {% empty %}
-        <p>Нотаток не знайдено.</p>
-        {% endfor %}
-    </main>
-
-    <footer class="footer">
-        <p>{{ notes|length }} нотаток · notes_app</p>
+    <footer class="text-center text-muted mt-5">
+        <small>{{ notes|length }} нотаток · notes_app</small>
     </footer>
 
 {% endblock %}

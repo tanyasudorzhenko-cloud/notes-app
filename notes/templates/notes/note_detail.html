@@ -4,36 +4,53 @@
 
 {% block content %}
 
-    <header class="hero">
-        <p class="hero__eyebrow">{{ note.category.title }}</p>
-        <h1 class="hero__title">{{ note.title }}</h1>
-        <p class="hero__subtitle">Перегляд і редагування нотатки</p>
-    </header>
-
-    <div class="form-card">
-        <form method="post">
-            {% csrf_token %}
-
-            {% for field in form %}
-            <div class="form-field">
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {{ field }}
-                {% if field.errors %}
-                    <p class="form-field__error">{{ field.errors|join:", " }}</p>
-                {% endif %}
-            </div>
-            {% endfor %}
-
-            <div class="form-actions">
-                <button type="submit" class="btn btn--primary">Зберегти зміни</button>
-                <a href="{% url 'notes_list' %}" class="btn btn--ghost">Назад до списку</a>
-                <a href="{% url 'note_delete' note.pk %}" class="btn btn--danger">Видалити нотатку</a>
-            </div>
-        </form>
+    <div class="d-flex align-items-center gap-2 mb-4">
+        <span class="badge text-bg-secondary">{{ note.category.title }}</span>
+        <h1 class="mb-0">{{ note.title }}</h1>
     </div>
 
-    <footer class="footer">
-        <p>notes_app</p>
-    </footer>
+    <form method="post" class="row g-3">
+        {% csrf_token %}
+
+        <div class="col-md-8">
+            <label for="{{ form.title.id_for_label }}" class="form-label">Назва</label>
+            {{ form.title }}
+            {% if form.title.errors %}
+                <div class="text-danger small mt-1">{{ form.title.errors|join:", " }}</div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-4">
+            <label for="{{ form.category.id_for_label }}" class="form-label">Категорія</label>
+            {{ form.category }}
+            {% if form.category.errors %}
+                <div class="text-danger small mt-1">{{ form.category.errors|join:", " }}</div>
+            {% endif %}
+        </div>
+
+        <div class="col-12">
+            <label for="{{ form.text.id_for_label }}" class="form-label">Текст</label>
+            {{ form.text }}
+            {% if form.text.errors %}
+                <div class="text-danger small mt-1">{{ form.text.errors|join:", " }}</div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-4">
+            <label for="{{ form.reminder.id_for_label }}" class="form-label">
+                Нагадування <span class="text-muted">(необов'язково)</span>
+            </label>
+            {{ form.reminder }}
+            {% if form.reminder.errors %}
+                <div class="text-danger small mt-1">{{ form.reminder.errors|join:", " }}</div>
+            {% endif %}
+        </div>
+
+        <div class="col-12 mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Зберегти зміни</button>
+            <a href="{% url 'notes_list' %}" class="btn btn-outline-secondary">Назад до списку</a>
+            <a href="{% url 'note_delete' note.pk %}" class="btn btn-outline-danger ms-auto">Видалити нотатку</a>
+        </div>
+    </form>
 
 {% endblock %}

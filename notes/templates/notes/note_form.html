@@ -4,35 +4,49 @@
 
 {% block content %}
 
-    <header class="hero">
-        <p class="hero__eyebrow">Notes App</p>
-        <h1 class="hero__title">Нова нотатка</h1>
-        <p class="hero__subtitle">Заповни поля і збережи нотатку.</p>
-    </header>
+    <h1 class="mb-4">Нова нотатка</h1>
 
-    <div class="form-card">
-        <form method="post">
-            {% csrf_token %}
+    <form method="post" class="row g-3">
+        {% csrf_token %}
 
-            {% for field in form %}
-            <div class="form-field">
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {{ field }}
-                {% if field.errors %}
-                    <p class="form-field__error">{{ field.errors|join:", " }}</p>
-                {% endif %}
-            </div>
-            {% endfor %}
+        <div class="col-md-8">
+            <label for="{{ form.title.id_for_label }}" class="form-label">Назва</label>
+            {{ form.title }}
+            {% if form.title.errors %}
+                <div class="text-danger small mt-1">{{ form.title.errors|join:", " }}</div>
+            {% endif %}
+        </div>
 
-            <div class="form-actions">
-                <button type="submit" class="btn btn--primary">Зберегти</button>
-                <a href="{% url 'notes_list' %}" class="btn btn--ghost">Скасувати</a>
-            </div>
-        </form>
-    </div>
+        <div class="col-md-4">
+            <label for="{{ form.category.id_for_label }}" class="form-label">Категорія</label>
+            {{ form.category }}
+            {% if form.category.errors %}
+                <div class="text-danger small mt-1">{{ form.category.errors|join:", " }}</div>
+            {% endif %}
+        </div>
 
-    <footer class="footer">
-        <p>notes_app</p>
-    </footer>
+        <div class="col-12">
+            <label for="{{ form.text.id_for_label }}" class="form-label">Текст</label>
+            {{ form.text }}
+            {% if form.text.errors %}
+                <div class="text-danger small mt-1">{{ form.text.errors|join:", " }}</div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-4">
+            <label for="{{ form.reminder.id_for_label }}" class="form-label">
+                Нагадування <span class="text-muted">(необов'язково)</span>
+            </label>
+            {{ form.reminder }}
+            {% if form.reminder.errors %}
+                <div class="text-danger small mt-1">{{ form.reminder.errors|join:", " }}</div>
+            {% endif %}
+        </div>
+
+        <div class="col-12 mt-4">
+            <button type="submit" class="btn btn-primary">Зберегти нотатку</button>
+            <a href="{% url 'notes_list' %}" class="btn btn-outline-secondary">Скасувати</a>
+        </div>
+    </form>
 
 {% endblock %}

@@ -4,23 +4,22 @@
 
 {% block content %}
 
-    <header class="hero">
-        <p class="hero__eyebrow">Notes App</p>
-        <h1 class="hero__title">Видалити нотатку?</h1>
-        <p class="hero__subtitle">Цю дію не можна буде скасувати.</p>
-    </header>
-
-    <div class="form-card">
-        <p><strong>{{ note.title }}</strong></p>
-        <p>{{ note.text }}</p>
-
-        <form method="post">
-            {% csrf_token %}
-            <div class="form-actions">
-                <button type="submit" class="btn btn--danger">Так, видалити</button>
-                <a href="{% url 'note_detail' note.pk %}" class="btn btn--ghost">Скасувати</a>
-            </div>
-        </form>
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">Видалити нотатку?</h4>
+        <p class="mb-0">Цю дію не можна буде скасувати.</p>
     </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">{{ note.title }}</h5>
+            <p class="card-text">{{ note.text }}</p>
+        </div>
+    </div>
+
+    <form method="post" class="d-flex gap-2">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Так, видалити</button>
+        <a href="{% url 'note_detail' note.pk %}" class="btn btn-outline-secondary">Скасувати</a>
+    </form>
 
 {% endblock %}

@@ -140,3 +140,72 @@ body {
         padding: 2rem 1.25rem 3rem;
     }
 }
+/* ---------- Підлаштування Bootstrap під тему сайту (parchment/ink/terracotta) ---------- */
+
+body {
+    font-family: var(--font-body);
+    background: var(--parchment);
+}
+
+h1, h2, h3, .navbar-brand, .display-6 {
+    font-family: var(--font-display);
+    color: var(--ink);
+}
+
+/* Навбар - замість стандартного bg-dark використовуємо свій "ink" колір */
+.navbar.bg-dark {
+    background-color: var(--ink) !important;
+}
+
+/* Основна кнопка - терракотовий акцент замість дефолтного синього Bootstrap */
+.btn-primary {
+    background-color: var(--terracotta);
+    border-color: var(--terracotta);
+}
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: #9c4630;
+    border-color: #9c4630;
+}
+
+/* Контурні кнопки - в тон чорнильному кольору */
+.btn-outline-secondary {
+    color: var(--ink);
+    border-color: var(--ink);
+}
+.btn-outline-secondary:hover {
+    background-color: var(--ink);
+    border-color: var(--ink);
+}
+
+.btn-outline-danger {
+    color: var(--terracotta);
+    border-color: var(--terracotta);
+}
+.btn-outline-danger:hover {
+    background-color: var(--terracotta);
+    border-color: var(--terracotta);
+}
+
+/* Бейдж категорії на картках - вохра замість сірого */
+.badge.text-bg-secondary {
+    background-color: var(--ochre) !important;
+    color: var(--charcoal) !important;
+}
+
+/* Трохи охайніші картки й фокус-стани полів */
+.card {
+    border-radius: 6px;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--ink);
+    box-shadow: 0 0 0 0.2rem rgba(27, 58, 75, 0.15);
+}
+
+.alert-danger {
+    background-color: rgba(181, 83, 60, 0.08);
+    border-color: var(--terracotta);
+    color: var(--charcoal);
+}
